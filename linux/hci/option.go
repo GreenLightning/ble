@@ -2,10 +2,10 @@ package hci
 
 import (
 	"errors"
-	"github.com/go-ble/ble/linux/hci/evt"
 	"time"
 
-	"github.com/go-ble/ble/linux/hci/cmd"
+	"github.com/GreenLightning/ble/linux/hci/cmd"
+	"github.com/GreenLightning/ble/linux/hci/evt"
 )
 
 // SetDeviceID sets HCI device ID.

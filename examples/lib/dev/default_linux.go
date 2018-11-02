@@ -1,8 +1,8 @@
 package dev
 
 import (
-	"github.com/go-ble/ble"
-	"github.com/go-ble/ble/linux"
+	"github.com/GreenLightning/ble"
+	"github.com/GreenLightning/ble/linux"
 )
 
 // DefaultDevice ...

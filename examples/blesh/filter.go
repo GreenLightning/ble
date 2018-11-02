@@ -3,7 +3,7 @@ package main
 import (
 	"strings"
 
-	"github.com/go-ble/ble"
+	"github.com/GreenLightning/ble"
 	"github.com/urfave/cli"
 )
 
