@@ -22,7 +22,15 @@ func NewDeviceWithName(name string, opts ...ble.Option) (*Device, error) {
 	return NewDeviceWithNameAndHandler(name, nil, opts...)
 }
 
+func NewDeviceWithErrorCallback(callback ErrorCallback, opts ...ble.Option) (*Device, error) {
+	return NewDeviceWithNameHandlerAndErrorCallback("Gopher", nil, callback, opts...)
+}
+
 func NewDeviceWithNameAndHandler(name string, handler ble.NotifyHandler, opts ...ble.Option) (*Device, error) {
+	return NewDeviceWithNameHandlerAndErrorCallback(name, handler, nil, opts...)
+}
+
+func NewDeviceWithNameHandlerAndErrorCallback(name string, handler ble.NotifyHandler, callback ErrorCallback, opts ...ble.Option) (*Device, error) {
 	dev, err := hci.NewHCI(opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "can't create hci")
@@ -45,20 +53,25 @@ func NewDeviceWithNameAndHandler(name string, handler ble.NotifyHandler, opts ..
 		return nil, errors.Wrapf(err, "maximum ATT_MTU is %d", ble.MaxMTU)
 	}
 
-	go loop(dev, srv, mtu)
+	go loop(dev, srv, mtu, callback)
 
 	return &Device{HCI: dev, Server: srv}, nil
 }
 
-func loop(dev *hci.HCI, s *gatt.Server, mtu int) {
+func loop(dev *hci.HCI, s *gatt.Server, mtu int, callback ErrorCallback) {
 	for {
 		l2c, err := dev.Accept()
 		if err != nil {
 			// An EOF error indicates that the HCI socket was closed during
-			// the read.  Don't report this as an error.
-			if err != io.EOF {
-				log.Printf("can't accept: %s", err)
+			// the read. Don't report this as an error.
+			if err == io.EOF {
+				return
 			}
+			if callback != nil {
+				callback(err)
+				return
+			}
+			log.Printf("can't accept: %s", err)
 			return
 		}
 
@@ -77,6 +90,8 @@ func loop(dev *hci.HCI, s *gatt.Server, mtu int) {
 		go as.Loop()
 	}
 }
+
+type ErrorCallback func(err error)
 
 // Device ...
 type Device struct {
